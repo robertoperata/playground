@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: play
+      POSTGRES_PASSWORD: play
+      POSTGRES_DB: play
+    ports:
+      - "5432:5432"
