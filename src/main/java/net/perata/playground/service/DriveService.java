@@ -1,9 +1,12 @@
 package net.perata.playground.service;
 
+import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.perata.playground.domain.Book;
+import net.perata.playground.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,19 +19,23 @@ import static java.lang.System.*;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class DriveService {
-    private static final String CSV_FILE_PATH = "input.csv";
+
+    private final BookRepository bookRepository;
+    private static final String CSV_FILE_PATH = "imports.csv";
 
     public void listFolder() throws IOException {
         try (Reader reader = Files.newBufferedReader(Paths.get(CSV_FILE_PATH))) {
+
+
             CsvToBean<Book> csvToBean = new CsvToBeanBuilder(reader)
                     .withType(Book.class)
                     .withIgnoreLeadingWhiteSpace(true)
                     .build();
 
             var books = csvToBean.parse();
-            books.forEach(out::println);
-
+            bookRepository.saveAll(books);
         }
     }
 }
