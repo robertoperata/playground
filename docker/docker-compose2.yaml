@@ -1,0 +1,62 @@
+version: '2'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka1:
+    image: confluentinc/cp-kafka:6.2.0
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,PLAINTEXT_HOST://localhost:9093
+#      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+#      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+#      KAFKA_CONFLUENT_SUPPORT_METRICS_TOPIC: _confluent-metrics
+#      KAFKA_CONFLUENT_SUPPORT_CUSTOMER_ID: docker
+#      KAFKA_CONFLUENT_SUPPORT_METRICS_ENDPOINT: http://confluent-support-metrics:8080
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.0.2
+    depends_on:
+      - kafka1
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.2.0
+    depends_on:
+      - kafka1
+      - schema-registry
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka1:9092
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+
+  kafka-rest-proxy:
+    image: confluentinc/cp-kafka-rest:6.2.0
+    depends_on:
+      - kafka1
+    ports:
+      - "8082:8082"
+    environment:
+      KAFKA_REST_HOST_NAME: kafka-rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: kafka1:9092
+      KAFKA_REST_LISTENERS: http://0.0.0.0:8082

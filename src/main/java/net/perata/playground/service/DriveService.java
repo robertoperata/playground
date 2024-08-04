@@ -1,6 +1,5 @@
 package net.perata.playground.service;
 
-import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.AllArgsConstructor;
@@ -29,7 +28,7 @@ public class DriveService {
     public void listFolder() throws IOException {
         try (Reader reader = Files.newBufferedReader(Paths.get(CSV_FILE_PATH))) {
 
-            CsvToBean<Book> csvToBean = new CsvToBeanBuilder(reader)
+            CsvToBean<Book> csvToBean = new CsvToBeanBuilder<Book>(reader)
                     .withType(Book.class)
                     .withIgnoreLeadingWhiteSpace(true)
                     .build();
@@ -40,7 +39,6 @@ public class DriveService {
     }
 
     public Page<Book> findAll(String sortBy, Integer skip, Integer limit) {
-        var page = org.hibernate.query.Page.page(limit, skip);
         int pageSize = Math.abs(limit);
         int pageNumber = Math.abs(Math.floorDiv(skip, limit));
         return bookRepository.findAll(PageRequest.of(pageNumber, pageSize, Sort.by(sortBy)));
