@@ -7,15 +7,16 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.perata.playground.domain.Book;
 import net.perata.playground.repository.BookRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
-import static java.lang.System.*;
 
 @Service
 @Slf4j
@@ -28,7 +29,6 @@ public class DriveService {
     public void listFolder() throws IOException {
         try (Reader reader = Files.newBufferedReader(Paths.get(CSV_FILE_PATH))) {
 
-
             CsvToBean<Book> csvToBean = new CsvToBeanBuilder(reader)
                     .withType(Book.class)
                     .withIgnoreLeadingWhiteSpace(true)
@@ -37,5 +37,12 @@ public class DriveService {
             var books = csvToBean.parse();
             bookRepository.saveAll(books);
         }
+    }
+
+    public Page<Book> findAll(String sortBy, Integer skip, Integer limit) {
+        var page = org.hibernate.query.Page.page(limit, skip);
+        int pageSize = Math.abs(limit);
+        int pageNumber = Math.abs(Math.floorDiv(skip, limit));
+        return bookRepository.findAll(PageRequest.of(pageNumber, pageSize, Sort.by(sortBy)));
     }
 }
